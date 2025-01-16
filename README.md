@@ -29,7 +29,7 @@ pip3 install -U swarms-tools
 ```plaintext
 swarms-tools/
 ├── swarms_tools/
-│   ├── financial_data/
+│   ├── finance/
 │   │   ├── htx_tool.py
 │   │   ├── eodh_api.py
 │   │   └── coingecko_tool.py
@@ -52,7 +52,7 @@ Enable precise and actionable financial insights:
 
 #### Example 1: Fetch Historical Data
 ```python
-from swarms_tools.financial_data.htx_tool import fetch_htx_data
+from swarms_tools import fetch_htx_data
 
 # Fetch historical trading data for "Swarms Corporation"
 response = fetch_htx_data("swarms")
@@ -61,7 +61,7 @@ print(response)
 
 #### Example 2: Stock News Analysis
 ```python
-from swarms_tools.financial_data.eodh_api import fetch_stock_news
+from swarms_tools import fetch_stock_news
 
 # Retrieve latest stock news for Apple
 news = fetch_stock_news("AAPL")
@@ -70,7 +70,7 @@ print(news)
 
 #### Example 3: Cryptocurrency Metrics
 ```python
-from swarms_tools.financial_data.coingecko_tool import coin_gecko_coin_api
+from swarms_tools import coin_gecko_coin_api
 
 # Fetch live data for Bitcoin
 crypto_data = coin_gecko_coin_api("bitcoin")
@@ -82,7 +82,7 @@ Streamline communication and engagement:
 
 #### Example: Telegram Bot Messaging
 ```python
-from swarms_tools.social_media.telegram_tool import telegram_dm_or_tag_api
+from swarms_tools import telegram_dm_or_tag_api
 
 def send_alert(response: str):
     telegram_dm_or_tag_api(response)

@@ -1,5 +1,5 @@
 from loguru import logger
-from swarms_tools.financial_data.coin_market_cap import (
+from swarms_tools.finance.coin_market_cap import (
     coinmarketcap_api,
 )
 

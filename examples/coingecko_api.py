@@ -1,4 +1,4 @@
-from swarms_tools.financial_data.coingecko_tool import (
+from swarms_tools.finance.coingecko_tool import (
     coin_gecko_coin_api,
 )
 
