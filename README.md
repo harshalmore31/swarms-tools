@@ -7,12 +7,6 @@ Welcome to **Swarms Tools**, the ultimate package for integrating **cutting-edge
 
 ---
 
-## 🌌 Vision
-
-At Swarms Corporation, we envision a world where **intelligent agents collaborate autonomously** to advance humanity. **Swarms Tools** delivers the building blocks for an interconnected, automated, and infinitely scalable future. Join us as we pioneer the tools of tomorrow, today.
-
----
-
 ## 🚀 Features
 
 - **Unified API Integration**: Ready-to-use Python functions for financial data, social media, IoT, and more.
