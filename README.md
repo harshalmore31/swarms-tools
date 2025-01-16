@@ -127,6 +127,9 @@ Every tool in **Swarms Tools** adheres to a strict schema for maintainability an
 4. **Output Standardization**:
    - Ensure consistent outputs (e.g., strings) for easy downstream agent integration.
 
+5. **API-Key Management**:
+    - All API keys must be fetched with `os.getenv("YOUR_KEY")`
+
 
 ---
 
