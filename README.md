@@ -47,6 +47,22 @@ swarms-tools/
 
 ## 💼 Use Cases
 
+
+
+## Finance
+
+Explore our diverse range of financial tools, designed to streamline your operations. If you need a tool not listed, feel free to submit an issue or accelerate integration by contributing a pull request with your tool of choice.
+
+| **Tool Name**             | **Function**             | **Description**                                                                 |
+|---------------------------|--------------------------|---------------------------------------------------------------------------------|
+| `fetch_stock_news`        | `fetch_stock_news`       | Fetches the latest stock news and updates.                                     |
+| `fetch_htx_data`          | `fetch_htx_data`         | Retrieves financial data from the HTX platform.                                |
+| `yahoo_finance_api`       | `yahoo_finance_api`      | Fetches comprehensive stock data from Yahoo Finance, including prices and trends. |
+| `coin_gecko_coin_api`     | `coin_gecko_coin_api`    | Fetches cryptocurrency data from CoinGecko, including market and price information. |
+| `helius_api_tool`         | `helius_api_tool`        | Retrieves blockchain account, transaction, or token data using the Helius API. |
+| `okx_api_tool`            | `okx_api_tool`           | Fetches detailed cryptocurrency data for coins from the OKX exchange.         |
+
+
 ### Financial Data Retrieval
 Enable precise and actionable financial insights:
 

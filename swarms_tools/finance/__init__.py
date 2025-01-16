@@ -7,11 +7,13 @@ from swarms_tools.finance.coingecko_tool import (
     coin_gecko_coin_api,
 )
 from swarms_tools.finance.helius_api import helius_api_tool
+from swarms_tools.finance.okx_tool import okx_api_tool
 
 __all__ = [
     "fetch_stock_news",
     "fetch_htx_data",
     "yahoo_finance_api",
     "coin_gecko_coin_api",
-    "helius_api_tool"
+    "helius_api_tool",
+    "okx_api_tool",
 ]

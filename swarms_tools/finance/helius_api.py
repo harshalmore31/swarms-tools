@@ -36,11 +36,15 @@ class HeliusAPI:
             response = requests.get(endpoint, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
-            logger.error(f"Failed to fetch account data from Helius API: {e}")
+            logger.error(
+                f"Failed to fetch account data from Helius API: {e}"
+            )
             raise
 
         data = response.json()
-        logger.debug(f"Raw data received for account {account}: {data}")
+        logger.debug(
+            f"Raw data received for account {account}: {data}"
+        )
 
         if "error" in data:
             logger.error(f"Error from Helius API: {data['error']}")
@@ -65,17 +69,23 @@ class HeliusAPI:
             requests.RequestException: If the API request fails.
         """
         endpoint = f"{HeliusAPI.BASE_URL}/transactions/{tx_signature}?api-key={HeliusAPI.API_KEY}"
-        logger.info(f"Fetching transaction data for signature: {tx_signature}")
+        logger.info(
+            f"Fetching transaction data for signature: {tx_signature}"
+        )
 
         try:
             response = requests.get(endpoint, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
-            logger.error(f"Failed to fetch transaction data from Helius API: {e}")
+            logger.error(
+                f"Failed to fetch transaction data from Helius API: {e}"
+            )
             raise
 
         data = response.json()
-        logger.debug(f"Raw data received for transaction {tx_signature}: {data}")
+        logger.debug(
+            f"Raw data received for transaction {tx_signature}: {data}"
+        )
 
         if "error" in data:
             logger.error(f"Error from Helius API: {data['error']}")
@@ -100,17 +110,23 @@ class HeliusAPI:
             requests.RequestException: If the API request fails.
         """
         endpoint = f"{HeliusAPI.BASE_URL}/tokens/{mint_address}?api-key={HeliusAPI.API_KEY}"
-        logger.info(f"Fetching token data for mint address: {mint_address}")
+        logger.info(
+            f"Fetching token data for mint address: {mint_address}"
+        )
 
         try:
             response = requests.get(endpoint, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
-            logger.error(f"Failed to fetch token data from Helius API: {e}")
+            logger.error(
+                f"Failed to fetch token data from Helius API: {e}"
+            )
             raise
 
         data = response.json()
-        logger.debug(f"Raw data received for token {mint_address}: {data}")
+        logger.debug(
+            f"Raw data received for token {mint_address}: {data}"
+        )
 
         if "error" in data:
             logger.error(f"Error from Helius API: {data['error']}")
@@ -141,9 +157,13 @@ def helius_api_tool(action: str, identifier: str) -> Dict[str, Any]:
         elif action == "token":
             return HeliusAPI.fetch_token_data(identifier)
         else:
-            raise ValueError(f"Invalid action: {action}. Must be 'account', 'transaction', or 'token'.")
+            raise ValueError(
+                f"Invalid action: {action}. Must be 'account', 'transaction', or 'token'."
+            )
     except Exception as e:
-        logger.error(f"Error performing action '{action}' with identifier '{identifier}': {e}")
+        logger.error(
+            f"Error performing action '{action}' with identifier '{identifier}': {e}"
+        )
         return {"error": str(e)}
 
 
