@@ -1,4 +1,4 @@
-from typing import Callable, List, Dict, Any
+from typing import Callable, List, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from loguru import logger
 from swarms_tools.utils.formatted_string import (
@@ -8,7 +8,7 @@ from swarms_tools.utils.formatted_string import (
 
 def tool_chainer(
     tools: List[Callable[[], Any]], parallel: bool = True
-) -> List[Dict[str, Any]]:
+) -> str:
     """
     Executes a list of callable tools in parallel or sequentially.
 

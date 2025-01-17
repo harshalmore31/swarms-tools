@@ -1,4 +1,3 @@
-
 # Example usage
 from loguru import logger
 
