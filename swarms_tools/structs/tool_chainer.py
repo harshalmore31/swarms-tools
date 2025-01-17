@@ -1,6 +1,9 @@
 from typing import Callable, List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from loguru import logger
+from swarms_tools.utils.formatted_string import (
+    format_object_to_string,
+)
 
 
 def tool_chainer(
@@ -86,7 +89,7 @@ def tool_chainer(
                     }
                 )
 
-    return results
+    return format_object_to_string(results)
 
 
 # # Example usage
@@ -100,15 +103,15 @@ def tool_chainer(
 #     def tool2():
 #         return "Tool2 Result"
 
-#     def tool3():
-#         raise ValueError("Simulated error in Tool3")
+#     # def tool3():
+#     #     raise ValueError("Simulated error in Tool3")
 
-#     tools = [tool1, tool2, tool3]
+#     tools = [tool1, tool2]
 
 #     # Parallel execution
 #     parallel_results = tool_chainer(tools, parallel=True)
 #     print("Parallel Results:", parallel_results)
 
 #     # Sequential execution
-#     sequential_results = tool_chainer(tools, parallel=False)
-#     print("Sequential Results:", sequential_results)
+#     # sequential_results = tool_chainer(tools, parallel=False)
+#     # print("Sequential Results:", sequential_results)
