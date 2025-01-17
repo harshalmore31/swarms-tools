@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "swarms-tools"
-version = "0.0.4"
+version = "0.0.5"
 description = "Paper - Pytorch"
 license = "MIT"
 authors = ["Kye Gomez <kye@apac.ai>"]
@@ -23,7 +23,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-loguru = "^0.7.0"
+loguru = "*"
 requests = "*"
 python-dotenv = "*"
 aiohttp = "^3.8.0"

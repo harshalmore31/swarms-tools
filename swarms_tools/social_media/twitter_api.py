@@ -24,6 +24,24 @@ class TwitterAPI:
     def __init__(self):
         """Initialize Twitter API with credentials from environment variables."""
         try:
+            # Log environment variable presence (not their values)
+            logger.debug("Checking Twitter API credentials...")
+            credentials = {
+                "API_KEY": bool(os.getenv("TWITTER_API_KEY")),
+                "API_SECRET": bool(os.getenv("TWITTER_API_SECRET")),
+                "ACCESS_TOKEN": bool(
+                    os.getenv("TWITTER_ACCESS_TOKEN")
+                ),
+                "ACCESS_TOKEN_SECRET": bool(
+                    os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+                ),
+            }
+            logger.debug(f"Credentials present: {credentials}")
+
+            if not all(credentials.values()):
+                missing = [k for k, v in credentials.items() if not v]
+                raise ValueError(f"Missing credentials: {missing}")
+
             self.client = tweepy.Client(
                 consumer_key=os.getenv("TWITTER_API_KEY"),
                 consumer_secret=os.getenv("TWITTER_API_SECRET"),
@@ -41,11 +59,23 @@ class TwitterAPI:
                 os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
             )
             self.api = tweepy.API(auth)
-            logger.info("Twitter API initialized successfully")
+
+            # Verify credentials
+            self.api.verify_credentials()
+            self.me = self.client.get_me()
+            if not self.me:
+                raise tweepy.TweepyException(
+                    "Failed to get user details"
+                )
+
+            logger.info(
+                f"Twitter API initialized successfully for user @{self.me.data.username}"
+            )
 
         except Exception as e:
             logger.error(
-                f"Failed to initialize Twitter API: {str(e)}"
+                f"Failed to initialize Twitter API: {str(e)}",
+                exc_info=True,
             )
             raise
 
@@ -80,14 +110,32 @@ class TwitterAPI:
     def get_mentions(self) -> Optional[Dict]:
         """Get recent mentions of the authenticated user."""
         try:
+            logger.info("Attempting to fetch recent mentions")
+
             mentions = self.client.get_users_mentions(
-                self.client.get_me().data.id,
-                tweet_fields=["created_at"],
-            ).data
-            return mentions
+                self.me.data.id,
+                tweet_fields=["created_at", "text", "author_id"],
+                expansions=["author_id"],
+                max_results=100,
+            )
+
+            if mentions.data:
+                logger.info(f"Found {len(mentions.data)} mentions")
+                for mention in mentions.data:
+                    logger.debug(
+                        f"Mention ID: {mention.id}, "
+                        f"Text: {mention.text}, "
+                        f"Created at: {mention.created_at}"
+                    )
+                return mentions.data
+            else:
+                logger.info("No mentions found")
+                return None
 
         except Exception as e:
-            logger.error(f"Failed to get mentions: {str(e)}")
+            logger.error(
+                f"Failed to get mentions: {str(e)}", exc_info=True
+            )
             return None
 
     def get_dms(self) -> Optional[Dict]:
@@ -105,23 +153,88 @@ class TwitterBot:
     """A simplified Twitter bot that responds to mentions and DMs."""
 
     def __init__(self, response_callback: Callable[[str], str]):
-        self.api = TwitterAPI()
-        self.response_callback = response_callback
-        self.last_mention_time = datetime.now()
-        self.processed_dms = set()
+        try:
+            self.api = TwitterAPI()
+            self.response_callback = response_callback
+            self.last_mention_time = datetime.now()
+            self.processed_dms = set()
+            logger.info("TwitterBot initialized successfully")
+        except Exception as e:
+            logger.error(
+                f"Failed to initialize TwitterBot: {str(e)}",
+                exc_info=True,
+            )
+            raise
 
     def handle_mentions(self) -> None:
         """Process and respond to new mentions."""
-        mentions = self.api.get_mentions()
-        if not mentions:
-            return
+        try:
+            logger.info("Checking for new mentions")
+            mentions = self.api.get_mentions()
 
-        for mention in mentions:
-            mention_time = mention.created_at
-            if mention_time > self.last_mention_time:
-                response = self.response_callback(mention.text)
-                self.api.reply_to_tweet(mention.id, response)
-                self.last_mention_time = mention_time
+            if not mentions:
+                logger.debug("No mentions to process")
+                return
+
+            for mention in mentions:
+                try:
+                    # Skip if we've already processed this mention
+                    if (
+                        hasattr(mention, "id")
+                        and str(mention.id) in self.processed_dms
+                    ):
+                        logger.debug(
+                            f"Skipping already processed mention {mention.id}"
+                        )
+                        continue
+
+                    mention_time = mention.created_at
+                    logger.debug(
+                        f"Processing mention {mention.id} from {mention_time}"
+                    )
+
+                    if mention_time > self.last_mention_time:
+                        logger.info(
+                            f"New mention found: {mention.id}"
+                        )
+                        logger.debug(f"Mention text: {mention.text}")
+
+                        response = self.response_callback(
+                            mention.text
+                        )
+                        logger.debug(
+                            f"Generated response: {response}"
+                        )
+
+                        if response:
+                            success = self.api.reply_to_tweet(
+                                mention.id, response
+                            )
+                            if success:
+                                logger.info(
+                                    f"Successfully replied to mention {mention.id}"
+                                )
+                                self.last_mention_time = mention_time
+                                self.processed_dms.add(
+                                    str(mention.id)
+                                )
+                            else:
+                                logger.error(
+                                    f"Failed to reply to mention {mention.id}"
+                                )
+                        else:
+                            logger.warning(
+                                f"Empty response generated for mention {mention.id}"
+                            )
+
+                except Exception as e:
+                    logger.error(
+                        f"Error processing mention {mention.id}: {str(e)}",
+                        exc_info=True,
+                    )
+
+        except Exception:
+            logger.error("Error in handle_mentions", exc_info=True)
 
     def handle_dms(self) -> None:
         """Process and respond to new DMs."""

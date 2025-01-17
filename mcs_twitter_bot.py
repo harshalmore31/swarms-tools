@@ -1,114 +1,216 @@
 import os
 import time
-
 from dotenv import load_dotenv
 from loguru import logger
+import tweepy
 from swarm_models import OpenAIChat
 from swarms import Agent
+from langchain_core.messages import HumanMessage
 
-from swarms_tools.social_media.twitter_api import TwitterBot
-
+# Load environment variables
 load_dotenv()
 
+# Verify environment variables are present
+required_vars = [
+    "TWITTER_API_KEY",
+    "TWITTER_API_SECRET",
+    "TWITTER_ACCESS_TOKEN",
+    "TWITTER_ACCESS_TOKEN_SECRET",
+    "OPENAI_API_KEY",
+]
 
-def init_medical_coder() -> Agent:
-    """Initialize the medical coding agent."""
-    model = OpenAIChat(
-        model_name="gpt-4",
-        max_tokens=3000,
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
+missing_vars = [var for var in required_vars if not os.getenv(var)]
+if missing_vars:
+    raise ValueError(
+        f"Missing required environment variables: {missing_vars}"
     )
 
-    return Agent(
-        agent_name="Medical Coder",
-        system_prompt="""
-        You are a highly experienced and certified medical coder with extensive knowledge of ICD-10 coding guidelines, clinical documentation standards, and compliance regulations. Your responsibility is to ensure precise, compliant, and well-documented coding for all clinical cases.
-
-        ### Primary Responsibilities:
-        1. **Review Clinical Documentation**: Analyze all available clinical records, including specialist inputs, physician notes, lab results, imaging reports, and discharge summaries.
-        2. **Assign Accurate ICD-10 Codes**: Identify and assign appropriate codes for primary diagnoses, secondary conditions, symptoms, and complications.
-        3. **Ensure Coding Compliance**: Follow the latest ICD-10-CM/PCS coding guidelines, payer-specific requirements, and organizational policies.
-        4. **Document Code Justification**: Provide clear, evidence-based rationale for each assigned code.
-
-        ### Output Requirements:
-        Provide a concise, Twitter-friendly response that includes:
-        1. The most relevant ICD-10 codes
-        2. Brief descriptions
-        3. Key supporting evidence
-        
-        Keep responses under 280 characters when possible, split into threads if needed.
-        """,
-        llm=model,
-        max_loops=1,
-        dynamic_temperature_enabled=True,
-    )
+# Configure logging
+logger.remove()  # Remove default handler
+logger.add(
+    "medical_coding_bot.log",
+    rotation="1 day",
+    level="DEBUG",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+    backtrace=True,
+    diagnose=True,
+)
+logger.add(
+    lambda msg: print(msg), level="INFO"
+)  # Also log to console
 
 
 class MedicalCodingBot:
-    """Twitter bot that provides medical coding assistance."""
-
     def __init__(self):
-        self.medical_coder = init_medical_coder()
-        self.twitter_bot = TwitterBot(
-            response_callback=self.generate_response
-        )
-        logger.info("Medical Coding Bot initialized")
-
-    def generate_response(self, message: str) -> str:
-        """Generate a medical coding response."""
+        """Initialize the bot with Twitter and OpenAI credentials."""
         try:
-            # Remove mentions from the message to focus on the medical query
-            clean_message = self.clean_message(message)
+            logger.debug("Initializing Twitter client...")
+            # Initialize Twitter client
+            self.client = tweepy.Client(
+                consumer_key=os.getenv("TWITTER_API_KEY"),
+                consumer_secret=os.getenv("TWITTER_API_SECRET"),
+                access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
+                access_token_secret=os.getenv(
+                    "TWITTER_ACCESS_TOKEN_SECRET"
+                ),
+                wait_on_rate_limit=True,
+            )
 
-            # Get response from medical coder
-            response = self.medical_coder.run(clean_message)
+            # Test Twitter authentication
+            logger.debug("Testing Twitter authentication...")
+            self.me = self.client.get_me()
+            if not self.me or not self.me.data:
+                raise ValueError("Failed to get Twitter user details")
+            logger.info(
+                f"Twitter initialized for @{self.me.data.username}"
+            )
 
-            # Ensure response fits Twitter's character limit
-            return self.format_response(response)
+            # Initialize OpenAI
+            logger.debug("Initializing OpenAI...")
+            self.model = OpenAIChat(
+                model_name="gpt-4",
+                max_tokens=3000,
+                openai_api_key=os.getenv("OPENAI_API_KEY"),
+            )
 
-        except Exception as e:
-            logger.error(f"Error generating response: {str(e)}")
-            return "I apologize, but I encountered an error processing your request. Please try again."
+            # Test OpenAI
+            logger.debug("Testing OpenAI connection...")
+            test_message = HumanMessage(content="Test message")
+            test_response = self.model.invoke([test_message])
+            if not test_response:
+                raise ValueError("Failed to get response from OpenAI")
+            logger.debug("OpenAI test successful")
 
-    def clean_message(self, message: str) -> str:
-        """Remove Twitter mentions and clean up the message."""
-        # Remove mentions (starting with @)
-        words = message.split()
+            # Initialize Medical Coder
+            logger.debug("Initializing Medical Coder agent...")
+            self.medical_coder = Agent(
+                agent_name="Medical Coder",
+                system_prompt="""You are a medical coding expert. When asked about medical conditions, provide:
+                1. The most relevant ICD-10 code
+                2. A brief description (1-2 sentences)
+                Keep total response under 280 characters.""",
+                llm=self.model,
+                max_loops=1,
+            )
+
+            self.last_mention_time = None
+            logger.info("Medical Coding Bot initialized successfully")
+
+        except Exception:
+            logger.error("Initialization failed", exc_info=True)
+            raise
+
+    def clean_message(self, text: str) -> str:
+        """Remove mentions and clean the message."""
+        words = text.split()
         clean_words = [
             word for word in words if not word.startswith("@")
         ]
         return " ".join(clean_words).strip()
 
-    def format_response(self, response: str) -> str:
-        """Format the response to fit Twitter's character limit."""
-        if len(response) <= 280:
-            return response
+    def check_mentions(self):
+        """Check and respond to mentions."""
+        try:
+            logger.info("Checking mentions...")
+            mentions = self.client.get_users_mentions(
+                self.me.data.id,
+                tweet_fields=["created_at", "text"],
+                max_results=10,
+            )
 
-        # Split into multiple tweets if needed
-        # For now, just truncate to fit
-        return response[:277] + "..."
+            if not mentions.data:
+                logger.debug("No mentions found")
+                return
 
-    def run(self, check_interval: int = 60):
+            logger.info(f"Found {len(mentions.data)} mentions")
+            for mention in mentions.data:
+                try:
+                    # Skip if we've already processed this mention
+                    if (
+                        self.last_mention_time
+                        and mention.created_at
+                        <= self.last_mention_time
+                    ):
+                        logger.debug(
+                            f"Skipping already processed mention {mention.id}"
+                        )
+                        continue
+
+                    logger.info(
+                        f"Processing mention {mention.id}: {mention.text}"
+                    )
+
+                    # Clean the message
+                    clean_text = self.clean_message(mention.text)
+                    logger.debug(f"Cleaned text: {clean_text}")
+
+                    if not clean_text:
+                        logger.debug(
+                            "Skipping empty message after cleaning"
+                        )
+                        continue
+
+                    # Generate response
+                    logger.debug("Generating response...")
+                    response = self.medical_coder.run(clean_text)
+                    logger.debug(f"Generated response: {response}")
+
+                    if not response:
+                        logger.warning(
+                            "Empty response from medical coder"
+                        )
+                        continue
+
+                    # Ensure response isn't too long
+                    if len(response) > 280:
+                        response = response[:277] + "..."
+
+                    # Reply to tweet
+                    logger.debug(f"Sending reply to {mention.id}")
+                    self.client.create_tweet(
+                        text=response, in_reply_to_tweet_id=mention.id
+                    )
+                    logger.info(
+                        f"Successfully replied to mention {mention.id}"
+                    )
+
+                    self.last_mention_time = mention.created_at
+
+                except Exception:
+                    logger.error(
+                        f"Error processing mention {mention.id}",
+                        exc_info=True,
+                    )
+                    continue
+
+        except Exception:
+            logger.error("Error checking mentions", exc_info=True)
+
+    def run(self):
         """Run the bot continuously."""
-        logger.info("Starting Medical Coding Bot")
-
+        logger.info("Starting bot...")
+        iteration = 0
         while True:
             try:
-                # Handle mentions
-                self.twitter_bot.handle_mentions()
-
-                # Handle DMs
-                self.twitter_bot.handle_dms()
-
-                # Wait before next check
-                time.sleep(check_interval)
-
-            except Exception as e:
-                logger.error(f"Error in bot loop: {str(e)}")
-                time.sleep(check_interval)
+                iteration += 1
+                logger.info(f"Starting iteration {iteration}")
+                self.check_mentions()
+                logger.info(
+                    f"Completed iteration {iteration}, sleeping for 60 seconds"
+                )
+                time.sleep(60)  # Check every minute
+            except Exception:
+                logger.error(
+                    f"Error in iteration {iteration}", exc_info=True
+                )
+                time.sleep(60)  # Wait before retrying
 
 
 if __name__ == "__main__":
-    # Initialize and run the bot
-    medical_bot = MedicalCodingBot()
-    medical_bot.run()
+    try:
+        logger.info("Starting Medical Coding Bot")
+        bot = MedicalCodingBot()
+        bot.run()
+    except Exception:
+        logger.critical("Fatal error occurred", exc_info=True)
+        raise
