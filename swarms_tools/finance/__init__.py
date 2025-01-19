@@ -14,6 +14,12 @@ from swarms_tools.finance.yahoo_finance import (
     yahoo_finance_api,
 )
 from swarms_tools.finance.coin_market_cap import coinmarketcap_api
+from swarms_tools.finance.dex_screener import (
+    DexScreenerAPI,
+    fetch_dex_screener_profiles,
+    fetch_latest_token_boosts,
+    fetch_solana_token_pairs,
+)
 
 __all__ = [
     "fetch_stock_news",
@@ -26,4 +32,8 @@ __all__ = [
     "place_buy_order",
     "place_sell_order",
     "coinmarketcap_api",
+    "DexScreenerAPI",
+    "fetch_dex_screener_profiles",
+    "fetch_latest_token_boosts",
+    "fetch_solana_token_pairs",
 ]

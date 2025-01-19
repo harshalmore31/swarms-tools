@@ -107,6 +107,26 @@ def send_alert(response: str):
 send_alert("Mission-critical update from Swarms.")
 ```
 
+---
+
+## Dex Screener
+
+This is a tool that allows you to fetch data from the Dex Screener API. It supports multiple chains and multiple tokens.
+
+```python
+from swarms_tools.finance.dex_screener import (
+    fetch_latest_token_boosts,
+    fetch_dex_screener_profiles,
+)
+
+
+fetch_dex_screener_profiles()
+fetch_latest_token_boosts()
+
+```
+
+---
+
 
 ## Structs
 The tool chainer enables the execution of multiple tools in a sequence, allowing for the aggregation of their results in either a parallel or sequential manner.
