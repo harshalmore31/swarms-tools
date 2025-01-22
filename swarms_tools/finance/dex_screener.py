@@ -343,18 +343,39 @@ class DexScreenerAPI:
 
 # Example usage
 def fetch_dex_screener_profiles():
+    """
+    Fetches and prints the latest token profiles from DexScreener.
+
+    This function initializes a DexScreenerAPI instance, fetches the latest token profiles,
+    and prints them in a formatted string.
+    """
     dex_screener = DexScreenerAPI()
     pairs = dex_screener.get_latest_token_profiles()
     print(format_object_to_string(pairs))
 
 
 def fetch_latest_token_boosts():
+    """
+    Fetches and prints the latest token boosts from DexScreener.
+
+    This function initializes a DexScreenerAPI instance, fetches the latest token boosts,
+    and prints them in a formatted string.
+    """
     dex_screener = DexScreenerAPI()
     pairs = dex_screener.get_latest_token_boosts()
     print(format_object_to_string(pairs))
 
 
 def fetch_solana_token_pairs(token_addresses: List[str]):
+    """
+    Fetches and prints the token pairs for Solana blockchain from DexScreener.
+
+    Args:
+        token_addresses (List[str]): A list of token addresses to fetch pairs for.
+
+    This function initializes a DexScreenerAPI instance, fetches the token pairs for the specified
+    token addresses on the Solana blockchain, and prints them in a formatted string.
+    """
     chain_id = "solana"  # Replace with the actual chain ID for Solana
     dex_screener = DexScreenerAPI()
     pairs = dex_screener.get_token_pairs(chain_id, token_addresses)

@@ -201,7 +201,7 @@ class SectorAnalyzer:
             raise
 
 
-def main():
+def analyze_index_sectors():
     """Main function for demonstration purposes."""
     analyzer = SectorAnalyzer()
     results = analyzer.analyze_sectors()
@@ -223,5 +223,5 @@ def main():
     )
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     analyze_index_sectors()
