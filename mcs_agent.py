@@ -74,7 +74,7 @@ medical_coder = Agent(
 
 # Define your options with the necessary credentials
 options = {
-    "id": "29998836",
+    "id": "mcsswarm",
     "name": "mcsswarm",
     "description": "An example Twitter Plugin for testing.",
     "credentials": {
@@ -87,11 +87,6 @@ options = {
 
 # Initialize the TwitterTool with your options
 twitter_plugin = TwitterTool(options)
-
-# # Post a tweet
-# post_tweet_fn = twitter_plugin.get_function('post_tweet')
-# post_tweet_fn("Hello world!")
-
 
 # Assuming `twitter_plugin` and `medical_coder` are already initialized
 post_tweet = twitter_plugin.get_function("post_tweet")

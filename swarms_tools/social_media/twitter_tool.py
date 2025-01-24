@@ -174,10 +174,14 @@ class TwitterTool:
 
 def initialize_twitter_tool() -> TwitterTool:
     # Define your options with the necessary credentials
+    id = os.getenv("TWITTER_ID")
+    name = os.getenv("TWITTER_NAME")
+    description = os.getenv("TWITTER_DESCRIPTION")
+    
     options = {
-        "id": "29998836",
-        "name": "mcsswarm",
-        "description": "An example Twitter Plugin for testing.",
+        "id": id,
+        "name": name,
+        "description": description,
         "credentials": {
             "apiKey": os.getenv("TWITTER_API_KEY"),
             "apiSecretKey": os.getenv("TWITTER_API_SECRET_KEY"),
