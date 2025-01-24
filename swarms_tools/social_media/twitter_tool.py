@@ -1,11 +1,14 @@
 import logging
+import os
 import subprocess
 from typing import Any, Callable, Dict, List, Optional
 
 try:
     import tweepy
 except ImportError:
-    print("Tweepy is not installed. Please install it using 'pip install tweepy'.")
+    print(
+        "Tweepy is not installed. Please install it using 'pip install tweepy'."
+    )
     subprocess.run(["pip", "install", "tweepy"])
     raise
 
@@ -167,3 +170,117 @@ class TwitterTool:
             print(f"Successfully quoted tweet {tweet_id}.")
         except tweepy.TweepyException as e:
             print(f"Failed to quote tweet {tweet_id}: {e}")
+
+
+def initialize_twitter_tool() -> TwitterTool:
+    # Define your options with the necessary credentials
+    options = {
+        "id": "29998836",
+        "name": "mcsswarm",
+        "description": "An example Twitter Plugin for testing.",
+        "credentials": {
+            "apiKey": os.getenv("TWITTER_API_KEY"),
+            "apiSecretKey": os.getenv("TWITTER_API_SECRET_KEY"),
+            "accessToken": os.getenv("TWITTER_ACCESS_TOKEN"),
+            "accessTokenSecret": os.getenv(
+                "TWITTER_ACCESS_TOKEN_SECRET"
+            ),
+        },
+    }
+
+    # Initialize the TwitterTool with your options
+    twitter_plugin = TwitterTool(options)
+    return twitter_plugin
+
+
+def post_tweet(tweet: str) -> None:
+    """
+    Posts a tweet with the given text.
+
+    Args:
+        tweet (str): The text of the tweet to post.
+
+    Raises:
+        tweepy.TweepyException: If there's an error posting the tweet.
+    """
+    try:
+        twitter_plugin = initialize_twitter_tool()
+        twitter_plugin.post_tweet(tweet)
+        print(f"Tweet posted successfully: {tweet}")
+    except tweepy.TweepyException as e:
+        print(f"Failed to post tweet: {e}")
+
+
+def reply_tweet(tweet_id: int, reply: str) -> None:
+    """
+    Replies to a tweet with the given ID and reply text.
+
+    Args:
+        tweet_id (int): The ID of the tweet to reply to.
+        reply (str): The text of the reply.
+
+    Raises:
+        tweepy.TweepyException: If there's an error replying to the tweet.
+    """
+    try:
+        twitter_plugin = initialize_twitter_tool()
+        twitter_plugin.reply_tweet(tweet_id, reply)
+        print(f"Successfully replied to tweet {tweet_id}.")
+    except tweepy.TweepyException as e:
+        print(f"Failed to reply to tweet {tweet_id}: {e}")
+
+
+def like_tweet(tweet_id: int) -> None:
+    """
+    Likes a tweet with the given ID.
+
+    Args:
+        tweet_id (int): The ID of the tweet to like.
+
+    Raises:
+        tweepy.TweepyException: If there's an error liking the tweet.
+    """
+    try:
+        twitter_plugin = initialize_twitter_tool()
+        twitter_plugin.like_tweet(tweet_id)
+        print(f"Tweet {tweet_id} liked successfully.")
+    except tweepy.TweepyException as e:
+        print(f"Failed to like tweet {tweet_id}: {e}")
+
+
+def quote_tweet(tweet_id: int, quote: str) -> None:
+    """
+    Quotes a tweet with the given ID and adds a quote text.
+
+    Args:
+        tweet_id (int): The ID of the tweet to quote.
+        quote (str): The text of the quote.
+
+    Raises:
+        tweepy.TweepyException: If there's an error quoting the tweet.
+    """
+    try:
+        twitter_plugin = initialize_twitter_tool()
+        twitter_plugin.quote_tweet(tweet_id, quote)
+        print(f"Successfully quoted tweet {tweet_id}.")
+    except tweepy.TweepyException as e:
+        print(f"Failed to quote tweet {tweet_id}: {e}")
+
+
+def get_metrics() -> Dict[str, int]:
+    """
+    Retrieves metrics from the Twitter plugin.
+
+    Returns:
+        Dict[str, int]: A dictionary containing metrics.
+
+    Raises:
+        tweepy.TweepyException: If there's an error fetching metrics.
+    """
+    try:
+        twitter_plugin = initialize_twitter_tool()
+        metrics = twitter_plugin.get_metrics()
+        return metrics
+    except tweepy.TweepyException as e:
+        print(f"Failed to fetch metrics: {e}")
+        return {}
