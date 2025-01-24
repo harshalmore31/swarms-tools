@@ -1,4 +1,3 @@
-import logging
 import os
 import subprocess
 from typing import Any, Callable, Dict, List, Optional
@@ -53,10 +52,6 @@ class TwitterTool:
             "quote_tweet": self._quote_tweet,
         }
 
-        # Configure logging
-        logging.basicConfig(level=logging.INFO)
-        self.logger: logging.Logger = logging.getLogger(__name__)
-
     @property
     def available_functions(self) -> List[str]:
         """
@@ -98,7 +93,7 @@ class TwitterTool:
                 user_fields=["public_metrics"]
             )
             if not user or not user.data:
-                self.logger.warning("Failed to fetch user metrics.")
+                print("Failed to fetch user metrics.")
                 return {}
             public_metrics = user.data.public_metrics
             return {
