@@ -1,2 +1,10 @@
 requests
 loguru
+aiohttp
+beautifulsoup4
+python-dotenv
+google-generativeai
+rich
+html2text
+playwright
+tenacity
