@@ -1,6 +1,8 @@
-from typing import Dict, Any
+from typing import Any, Dict
+
 import requests
 from loguru import logger
+
 from swarms_tools.utils.formatted_string import (
     format_object_to_string,
 )
