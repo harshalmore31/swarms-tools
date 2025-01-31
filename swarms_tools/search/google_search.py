@@ -300,7 +300,7 @@ def web_search(query: str) -> str:
     searcher = WebSearch()
     return asyncio.run(searcher.search(query))
 
-if __name__ == "__main__":
-    results = web_search("India Maha Kumbh")
-    console.print("\n[bold]Formatted Results:[/bold]\n")
-    console.print(results)
+# if __name__ == "__main__":
+#     results = web_search("India Maha Kumbh")
+#     console.print("\n[bold]Formatted Results:[/bold]\n")
+#     console.print(results)
