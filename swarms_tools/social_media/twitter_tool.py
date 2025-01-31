@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 from typing import Any, Callable, Dict, List, Optional
 
 try:
@@ -166,13 +167,107 @@ class TwitterTool:
         except tweepy.TweepyException as e:
             print(f"Failed to quote tweet {tweet_id}: {e}")
 
+        # Add to the TwitterPlugin class
+
+    def _fetch_mentions(self) -> List[Dict[str, Any]]:
+        try:
+            # Fetch the authenticated user's ID
+            user = self.twitter_client.get_me()
+            user_id = user.data.id
+
+            # Fetch mentions
+            response = self.twitter_client.get_users_mentions(
+                id=user_id,
+                tweet_fields=[
+                    "id",
+                    "text",
+                    "author_id",
+                    "created_at",
+                ],
+            )
+
+            # Log rate limit information
+            headers = response.headers
+            print(f"Rate Limit: {headers.get('x-rate-limit-limit')}")
+            print(
+                f"Remaining: {headers.get('x-rate-limit-remaining')}"
+            )
+            print(f"Reset Time: {headers.get('x-rate-limit-reset')}")
+
+            if response.data:
+                print(f"Fetched {len(response.data)} mentions.")
+                return response.data
+            else:
+                print("No new mentions found.")
+            return []
+        except tweepy.TooManyRequests as e:
+            print(
+                f"Rate limit exceeded: {e.response.headers.get('x-rate-limit-reset')} seconds until reset."
+            )
+            time.sleep(
+                int(e.response.headers.get("x-rate-limit-reset", 60))
+            )
+            return []
+        except tweepy.TweepyException as e:
+            print(f"Error fetching mentions: {e}")
+            return []
+
+    def reply_to_mentions_with_agent(self, agent: Any) -> None:
+        print("Starting real-time mention monitoring...")
+        replied_tweets = set()
+
+        while True:
+            try:
+                mentions = self._fetch_mentions()
+                for mention in mentions:
+                    tweet_id = mention["id"]
+                    tweet_text = mention["text"]
+
+                    if tweet_id not in replied_tweets:
+                        try:
+                            response = agent(tweet_text)
+                            self._reply_tweet(tweet_id, response)
+                            print(
+                                f"Replied to tweet {tweet_id}: {response}"
+                            )
+                            replied_tweets.add(tweet_id)
+                        except tweepy.TweepyException as e:
+                            print(
+                                f"Error replying to tweet {tweet_id}: {e}"
+                            )
+
+                # Dynamic backoff based on remaining requests
+                headers = self.twitter_client.last_response.headers
+                remaining = int(
+                    headers.get("x-rate-limit-remaining", 0)
+                )
+                reset_time = int(
+                    headers.get("x-rate-limit-reset", 60)
+                )
+
+                if remaining <= 5:  # If close to the limit
+                    sleep_time = reset_time - int(time.time()) + 1
+                    print(
+                        f"Approaching rate limit. Sleeping for {sleep_time} seconds."
+                    )
+                    time.sleep(max(sleep_time, 1))
+                else:
+                    time.sleep(60)  # Default sleep time
+
+            except tweepy.TooManyRequests:
+                print("Rate limit exceeded. Sleeping...")
+                time.sleep(300)  # Fallback sleep for 5 minutes
+
 
 def initialize_twitter_tool() -> TwitterTool:
     # Define your options with the necessary credentials
-    id = os.getenv("TWITTER_ID")
-    name = os.getenv("TWITTER_NAME")
-    description = os.getenv("TWITTER_DESCRIPTION")
-    
+    id = os.getenv("TWITTER_ID") or "twitter_plugin"
+    name = os.getenv("TWITTER_NAME") or "Twitter Plugin"
+    description = (
+        os.getenv("TWITTER_DESCRIPTION")
+        or "A plugin that executes tasks within Twitter, capable of posting, replying, quoting, and liking tweets, and getting metrics."
+    )
+
     options = {
         "id": id,
         "name": name,
@@ -283,3 +378,23 @@ def get_metrics() -> Dict[str, int]:
     except tweepy.TweepyException as e:
         print(f"Failed to fetch metrics: {e}")
         return {}
+
+
+def reply_to_mentions_with_agent(
+    agent: Any, interval: int = 10
+) -> None:
+    """
+    Replies to mentions on Twitter using the provided agent and interval.
+
+    Args:
+        agent (Any): The agent to use for replying to mentions.
+        interval (int, optional): The time interval in seconds between replies. Defaults to 10.
+
+    Raises:
+        tweepy.TweepyException: If there's an error replying to mentions.
+    """
+    try:
+        twitter_plugin = initialize_twitter_tool()
+        twitter_plugin.reply_to_mentions_with_agent(agent)
+    except tweepy.TweepyException as e:
+        print(f"Failed to reply to mentions: {e}")

@@ -21,6 +21,10 @@ from swarms_tools.finance.dex_screener import (
     fetch_solana_token_pairs,
 )
 from swarms_tools.finance.macro_tool import fetch_macro_financial_data
+from swarms_tools.finance.check_solana_address import (
+    check_solana_balance,
+    check_multiple_wallets,
+)
 
 __all__ = [
     "fetch_stock_news",
@@ -38,4 +42,6 @@ __all__ = [
     "fetch_latest_token_boosts",
     "fetch_solana_token_pairs",
     "fetch_macro_financial_data",
+    "check_solana_balance",
+    "check_multiple_wallets",
 ]
