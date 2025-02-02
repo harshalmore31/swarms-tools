@@ -33,10 +33,10 @@ def search_exa_ai(
         response.raise_for_status()  # Raises an HTTPError if the response status code is 4XX/5XX
         return response.json()
     except requests.exceptions.HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}')
+        print(f"HTTP error occurred: {http_err}")
         return "Failed to retrieve results due to an HTTP error."
     except Exception as err:
-        print(f'Other error occurred: {err}')
+        print(f"Other error occurred: {err}")
         return "Failed to retrieve results due to an error."
 
 
